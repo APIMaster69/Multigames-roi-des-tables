@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Le Roi des Tables — API Master</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a1a;font-family:'Arial Black',Arial,sans-serif;overflow:hidden}
+#stage{width:100vw;height:100vh;position:relative;overflow:hidden;background:#0a0a1a;cursor:pointer}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;pointer-events:none}
+.scene.active{opacity:1;pointer-events:all}
+.bg-stars{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#1a1a3e 0%,#0a0a1a 100%)}
+.bg-cosmic{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#000010 0%,#0a0020 40%,#1a0030 100%)}
+.bg-mirror{position:absolute;inset:0;background:linear-gradient(135deg,#1a2a4a,#0d1b2a)}
+.bg-punch{position:absolute;inset:0;background:linear-gradient(135deg,#2a1a0a,#3a2010)}
+.bg-trio{position:absolute;inset:0;background:linear-gradient(135deg,#0a2a0a,#1a3a1a)}
+.bg-double{position:absolute;inset:0;background:linear-gradient(135deg,#2a0a2a,#3a1a3a)}
+.bg-hand{position:absolute;inset:0;background:linear-gradient(135deg,#2a2a0a,#3a3a1a)}
+.bg-ninja{position:absolute;inset:0;background:linear-gradient(135deg,#0a1a2a,#0a0a1a)}
+.bg-sage{position:absolute;inset:0;background:linear-gradient(135deg,#1a1500,#2a2000)}
+.bg-slide{position:absolute;inset:0;background:linear-gradient(180deg,#0a2a3a,#1a3a4a)}
+.bg-fingers{position:absolute;inset:0;background:linear-gradient(135deg,#1a0a2a,#2a1a3a)}
+.bg-boost{position:absolute;inset:0;background:linear-gradient(135deg,#001a3a,#003a6a)}
+.bg-double2{position:absolute;inset:0;background:linear-gradient(135deg,#2a0010,#3a0020)}
+.bg-outro{position:absolute;inset:0;background:linear-gradient(135deg,#1a0a3a,#2a1a4a)}
+.bg-quiz{position:absolute;inset:0;background:linear-gradient(135deg,#0a1a0a,#0a2a1a)}
+.sc{position:relative;z-index:10;text-align:center;padding:.5rem 1rem;width:100%;max-width:600px;margin:0 auto}
+.title-fire{font-size:clamp(22px,5vw,36px);font-weight:900;color:#FFD700;text-shadow:0 0 20px #FF6600,0 0 40px #FF3300;letter-spacing:2px;animation:fireFlicker .8s infinite alternate}
+@keyframes fireFlicker{from{text-shadow:0 0 20px #FF6600,0 0 40px #FF3300}to{text-shadow:0 0 30px #FF9900,0 0 60px #FF6600}}
+@keyframes bounce{from{transform:translateY(0) scale(1)}to{transform:translateY(-10px) scale(1.05)}}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.1)}}
+@keyframes shake{0%,100%{transform:translate(0,0) rotate(-2deg)}25%{transform:translate(-3px,3px) rotate(2deg)}75%{transform:translate(3px,-3px) rotate(-2deg)}}
+@keyframes popIn{from{transform:rotate(-3deg) scale(0)}to{transform:rotate(-3deg) scale(1)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fall{from{transform:translateY(-20px) rotate(0deg);opacity:1}to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes auraGrow{from{transform:translate(-50%,-60%) scale(1);opacity:.6}to{transform:translate(-50%,-60%) scale(1.3);opacity:1}}
+@keyframes zoomIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes charFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes charPop{0%{transform:scale(0) rotate(-10deg);opacity:0}60%{transform:scale(1.2) rotate(3deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+@keyframes starPop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+@keyframes mewFly{0%{transform:translateX(-150px) translateY(0) scaleX(1);opacity:0}10%{opacity:1}50%{transform:translateX(50vw) translateY(-40px) scaleX(1)}90%{opacity:1}100%{transform:translateX(110vw) translateY(0) scaleX(1);opacity:0}}
+@keyframes firework{0%{transform:scale(0);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.popup{display:inline-block;background:#FFD700;color:#000;font-size:clamp(14px,3vw,18px);font-weight:900;padding:6px 16px;border-radius:4px;border:3px solid #000;transform:rotate(-3deg);box-shadow:4px 4px 0 #000;animation:popIn .3s cubic-bezier(.17,.67,.39,1.5)}
+.impact{font-size:clamp(24px,4vw,38px);font-weight:900;color:#FF4444;text-shadow:3px 3px 0 #000,-3px -3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000;letter-spacing:4px;animation:shake .4s infinite}
+.bubble{background:#fff;border-radius:16px;border:3px solid #000;padding:8px 14px;font-size:clamp(11px,2vw,13px);font-weight:700;color:#000;position:relative;max-width:480px;margin:5px auto;box-shadow:4px 4px 0 #000;line-height:1.5}
+.bubble::before{content:'';position:absolute;bottom:-16px;left:40px;border:8px solid transparent;border-top:8px solid #000}
+.bubble::after{content:'';position:absolute;bottom:-12px;left:42px;border:6px solid transparent;border-top:6px solid #fff}
+.tip{background:#FFFDE7;border:3px solid #FFD700;border-radius:12px;padding:7px 12px;font-size:clamp(10px,1.8vw,12px);font-weight:700;color:#5D4037;max-width:440px;margin:5px auto;box-shadow:3px 3px 0 #FFD700}
+.tp{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-width:400px;margin:4px auto}
+.tpi{background:#FFD700;color:#000;border:2px solid #000;border-radius:4px;padding:2px 6px;font-size:11px;font-weight:900;box-shadow:2px 2px 0 #000;animation:slideIn .2s ease forwards;opacity:0}
+.prog-bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:20;flex-wrap:wrap;max-width:92%;justify-content:center}
+.pdot{width:8px;height:8px;border-radius:50%;background:#333;border:2px solid #555;transition:all .3s;cursor:pointer;flex-shrink:0}
+.pdot.done{background:#4CAF50}.pdot.current{background:#FFD700;transform:scale(1.4)}
+.pdot.quiz-dot{border-color:#9C27B0}.pdot.quiz-dot.done{background:#9C27B0}.pdot.quiz-dot.current{background:#E040FB}
+.nav-area{position:absolute;bottom:28px;left:0;right:0;display:flex;justify-content:center;gap:10px;z-index:20}
+.nbtn{padding:7px 18px;border-radius:6px;border:3px solid #000;font-size:12px;font-weight:900;cursor:pointer;background:#FFD700;color:#000;box-shadow:3px 3px 0 #000;transition:transform .1s;font-family:'Arial Black',Arial,sans-serif}
+.nbtn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #000}
+.nbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
+.nbtn.red{background:#FF4444;color:#fff}
+.auto-bar{position:absolute;top:8px;right:10px;z-index:30}
+.atbtn{padding:4px 11px;border-radius:20px;border:2px solid #555;background:#222;color:#aaa;font-size:11px;font-weight:700;cursor:pointer;font-family:'Arial Black',Arial,sans-serif}
+.atbtn.on{background:#FFD700;color:#000;border-color:#FFD700}
+.scene-lbl{position:absolute;top:8px;left:10px;font-size:10px;color:#555;font-weight:700;z-index:20;white-space:nowrap}
+.score-lbl{position:absolute;top:24px;left:10px;font-size:11px;font-weight:900;z-index:20;color:#FFD700}
+.shuriken{position:absolute;font-size:26px;animation:spin linear infinite}
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:fall linear forwards}
+.aura-ring{position:absolute;width:120px;height:120px;border-radius:50%;border:4px solid #4FC3F7;top:50%;left:50%;transform:translate(-50%,-50%);animation:auraGrow 1s infinite alternate}
+.finger-grid{display:flex;gap:5px;justify-content:center;margin:5px 0}
+.finger{width:22px;height:44px;background:#FFCCBC;border:2px solid #BF360C;border-radius:10px 10px 4px 4px;display:flex;align-items:flex-end;justify-content:center;font-size:10px;font-weight:700;color:#BF360C}
+.finger.down{background:#555;border-color:#333;color:#333;height:26px}
+.star{font-size:20px}
+.star.lit{color:#FFD700}
+.star.dim{color:#444}
+.star.blink{color:#FFD700;animation:blink .4s infinite}
+#logo-fixed{position:absolute;top:6px;right:10px;z-index:30;pointer-events:none}
+#logo-fixed img{height:36px;width:auto;display:block}
+/* QUIZ */
+.quiz-wrap{background:#0d2a1a;border:3px solid #00E676;border-radius:16px;padding:.8rem 1rem;max-width:460px;margin:0 auto;box-shadow:0 0 20px #00E67644}
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.quiz-badge{background:#00E676;color:#000;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px}
+.quiz-progress{display:flex;gap:4px;align-items:center}
+.qp-dot{width:10px;height:10px;border-radius:50%;background:#333;border:2px solid #555;transition:all .2s}
+.qp-dot.ok{background:#69F0AE;border-color:#69F0AE}
+.qp-dot.err{background:#FF5252;border-color:#FF5252}
+.qp-dot.cur{background:#FFD700;border-color:#FFD700;transform:scale(1.3)}
+.quiz-q{font-size:clamp(20px,4vw,28px);font-weight:900;color:#FFD700;margin:5px 0;text-shadow:2px 2px 0 #000}
+.quiz-choices{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:7px 0}
+.qchoice{padding:9px;border-radius:8px;border:3px solid #00E676;background:#0a1a0a;color:#fff;font-size:clamp(14px,3vw,16px);font-weight:900;cursor:pointer;transition:all .15s;font-family:'Arial Black',Arial,sans-serif}
+.qchoice:hover:not(:disabled){background:#003a10;transform:scale(1.04)}
+.qchoice.correct{background:#1B5E20;border-color:#69F0AE;color:#69F0AE;animation:zoomIn .3s ease}
+.qchoice.wrong{background:#5c0000;border-color:#8B0000;color:#ff9999}
+.qchoice:disabled{cursor:default;transform:none}
+.quiz-fb{font-size:14px;font-weight:900;min-height:20px;margin:3px 0;animation:fadeUp .3s ease}
+.quiz-fb.ok{color:#69F0AE}.quiz-fb.err{color:#FF5252}
+.quiz-score-bar{display:flex;gap:8px;justify-content:center;font-size:12px;font-weight:700;color:#aaa;margin-top:3px}
+.qs-ok{color:#69F0AE}.qs-err{color:#FF5252}
+/* REWARD */
+.reward-screen{border-radius:16px;padding:1rem;max-width:460px;margin:0 auto;text-align:center;animation:charPop .5s ease forwards}
+.reward-char{animation:charFloat 2s ease-in-out infinite;display:inline-block}
+.reward-stars{display:flex;gap:8px;justify-content:center;margin:6px 0}
+.reward-star{font-size:26px;animation:starPop .3s ease forwards;opacity:0}
+/* MEW ANIMATION */
+.mew-fly{position:fixed;top:35%;left:0;z-index:999;pointer-events:none;animation:mewFly 3s ease-in-out forwards}
+.firework-el{position:fixed;pointer-events:none;animation:firework .8s ease-out forwards;border-radius:50%}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="logo-fixed">
+    <img src="data:image/png;base64,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Iqidda41Xre5uuOqb7WXOYklrZZPuceejGD1WjwCjiJToU6fqoOTfEIiKY1CIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgP/Z" alt="API Master"/>
+  </div>
+  <div class="scene-lbl" id="scene-lbl">Intro</div>
+  <div class="score-lbl" id="score-lbl">⭐ 0</div>
+  <div class="auto-bar"><button class="atbtn" id="atbtn" onclick="toggleAuto()">▶ Auto</button></div>
+
+  <!-- LESSON SCENES -->
+  <div id="s0" class="scene active"><div class="bg-stars"></div><div class="sc">
+    <div class="title-fire">LE ROI DES TABLES</div>
+    <div style="font-size:clamp(60px,10vw,80px);margin:6px 0;animation:bounce .6s infinite alternate">🏴‍☠️</div>
+    <div class="bubble">"Salut la team ! Aujourd'hui on va <span style="color:#FF3300">dompter</span> les tables comme des créatures légendaires ! 0 à 11, sans stress — c'est parti !"</div>
+    <div style="margin-top:10px"><span class="popup">MANGA POWER !</span></div>
+  </div></div>
+
+  <div id="s1" class="scene"><div class="bg-cosmic"></div>
+    <div style="position:absolute;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,#000 30%,#1a0030 60%,transparent 100%);top:50%;left:50%;transform:translate(-50%,-60%);animation:auraGrow 1.5s infinite alternate"></div>
+    <div class="sc"><div style="font-size:18px;font-weight:900;color:#9C27B0;letter-spacing:3px;margin-bottom:3px">TABLE DE 0</div>
+    <div style="font-size:56px;margin:2px 0">🌌</div>
+    <div class="bubble">"C'est le <strong>trou noir des maths</strong> : peu importe le chiffre… PAF ! Ça fait toujours <strong>ZÉRO</strong> !"</div>
+    <div style="margin:4px 0"><span class="impact" style="font-size:28px">EFFET : ZERO !</span></div>
+    <div class="tip">⚡ N × 0 = 0. Toujours. Sans exception !</div>
+    <div class="tp" id="tp1"></div></div></div>
+
+  <div id="s2" class="scene"><div class="bg-mirror"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#4FC3F7;letter-spacing:3px;margin-bottom:3px">TABLE DE 1</div>
+    <div style="font-size:56px;margin:2px 0">🪞</div>
+    <div class="bubble">"La table de 1, c'est le <strong>miroir magique</strong>. Le chiffre reste lui-même ! 1 × 5 = 5 — C'est cadeau !"</div>
+    <div style="margin:4px 0"><span class="popup" style="transform:rotate(2deg)">LE REFLET !</span></div>
+    <div class="tip">🪞 N × 1 = N. Le 1 ne change jamais rien !</div>
+    <div class="tp" id="tp2"></div></div></div>
+
+  <div id="s3" class="scene"><div class="bg-punch"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#FF9800;letter-spacing:3px;margin-bottom:3px">TABLE DE 2</div>
+    <div style="font-size:56px;margin:2px 0">👊👊</div>
+    <div class="bubble">"Table de 2 : le <strong>Double Punch</strong> ! Nombres pairs. 6 × 2 = 6+6 = <strong>12</strong> !"</div>
+    <div style="margin:4px 0"><span class="impact" style="color:#FF9800;font-size:28px">DOUBLE PUNCH !</span></div>
+    <div class="tip">👊 Nombres pairs ! 2, 4, 6, 8, 10…</div>
+    <div class="tp" id="tp3"></div></div></div>
+
+  <div id="s4" class="scene"><div class="bg-trio"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#66BB6A;letter-spacing:3px;margin-bottom:3px">TABLE DE 3</div>
+    <div style="font-size:50px;margin:2px 0">🔥💧🌿</div>
+    <div class="bubble">"Pour la table de 3, imagine un <strong>trio de héros</strong> ! On avance de 3 en 3. <strong>3, 6, 9, 12…</strong>"</div>
+    <div style="margin:4px 0"><span class="popup" style="background:#66BB6A;color:#fff">TRIO DE CHOC !</span></div>
+    <div class="tip">🎵 3, 6, 9, 12, 15, 18, 21, 24, 27, 30…</div>
+    <div class="tp" id="tp4"></div></div></div>
+
+  <div id="s5" class="scene"><div class="bg-double"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#E040FB;letter-spacing:3px;margin-bottom:3px">TABLE DE 4</div>
+    <div style="font-size:56px;margin:2px 0">🌀</div>
+    <div class="bubble">"Astuce de génie : <strong>double, puis encore double !</strong> 4 × 5 → 10 → <strong>20</strong>. Terminé !"</div>
+    <div style="margin:4px 0"><span class="impact" style="color:#E040FB;font-size:28px">DOUBLE-DOUBLE !</span></div>
+    <div class="tip">🌀 ×4 = doubler deux fois de suite !</div>
+    <div class="tp" id="tp5"></div></div></div>
+
+  <div id="s6" class="scene"><div class="bg-hand"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#FFD700;letter-spacing:3px;margin-bottom:3px">TABLE DE 5</div>
+    <div style="font-size:56px;margin:2px 0">✋</div>
+    <div class="bubble">"La <strong>main magique</strong> ! Ça finit TOUJOURS par <strong>0 ou 5</strong>. Comme les minutes sur une montre !"</div>
+    <div style="margin:4px 0"><span class="popup">HIGH FIVE !</span></div>
+    <div class="tip">⏱️ Toujours 0 ou 5 ! 5, 10, 15, 20, 25, 30…</div>
+    <div class="tp" id="tp6"></div></div></div>
+
+  <div id="s7" class="scene"><div class="bg-ninja"></div>
+    <div class="shuriken" style="top:14%;left:8%;animation-duration:2s">🌟</div>
+    <div class="shuriken" style="top:18%;right:10%;animation-duration:1.5s;font-size:20px">✦</div>
+    <div class="sc"><div style="font-size:18px;font-weight:900;color:#4FC3F7;letter-spacing:3px;margin-bottom:3px">TABLE DE 6</div>
+    <div style="font-size:56px;margin:2px 0">🥷</div>
+    <div class="bubble">"6 × 4 = <strong>24</strong> (finit par 4 !). 6 × 8 = <strong>48</strong> (finit par 8 !). <strong>Magique !</strong>"</div>
+    <div style="margin:4px 0"><span class="impact" style="color:#4FC3F7;font-size:24px">DÉFI NINJA !</span></div>
+    <div class="tip">🥷 6 × pair → finit par le même chiffre !</div>
+    <div class="tp" id="tp7"></div></div></div>
+
+  <div id="s8" class="scene"><div class="bg-sage"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#FFC107;letter-spacing:3px;margin-bottom:3px">TABLE DE 7</div>
+    <div style="font-size:56px;margin:2px 0;animation:pulse 2s infinite">🧙</div>
+    <div class="bubble">"La plus <strong>rebelle</strong> ! Rappelle-toi des jours de la semaine : <strong>7, 14, 21, 28…</strong>"</div>
+    <div style="margin:4px 0"><span class="popup" style="background:#FFC107">L'ÉNIGME DU SAGE</span></div>
+    <div class="tip">📅 7, 14, 21, 28, 35, 42, 49, 56, 63, 70…</div>
+    <div class="tp" id="tp8"></div></div></div>
+
+  <div id="s9" class="scene"><div class="bg-slide"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#26C6DA;letter-spacing:3px;margin-bottom:3px">TABLE DE 8</div>
+    <div style="font-size:56px;margin:2px 0">🎢</div>
+    <div class="bubble">"Unités : <strong>8, 6, 4, 2, 0</strong> ça descend ! 8 → 16 → 24 → 32 → 40…"</div>
+    <div style="margin:4px 0"><span class="impact" style="color:#26C6DA;font-size:22px">LE TOBOGGAN !</span></div>
+    <div class="tip">🎢 Unités : 8, 6, 4, 2, 0, 8, 6, 4, 2, 0… en boucle !</div>
+    <div class="tp" id="tp9"></div></div></div>
+
+  <div id="s10" class="scene"><div class="bg-fingers"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#CE93D8;letter-spacing:3px;margin-bottom:3px">TABLE DE 9</div>
+    <div style="font-size:16px;font-weight:900;color:#fff;margin-bottom:3px">9 × 3 = ?</div>
+    <div class="finger-grid" id="fingers9"></div>
+    <div class="bubble">"9 × 3 → baisse le 3ème doigt → <strong>2 à gauche, 7 à droite</strong> → <strong>27</strong> !"</div>
+    <div style="margin:4px 0"><span class="popup" style="background:#9C27B0;color:#fff">CHEAT CODE !</span></div>
+    <div class="tip">🤫 Somme des chiffres de la réponse = toujours 9 !</div>
+    <div class="tp" id="tp10"></div></div></div>
+
+  <div id="s11" class="scene"><div class="bg-boost"></div>
+    <div class="aura-ring" style="background:transparent;border-color:#4FC3F7;width:100px;height:100px"></div>
+    <div class="sc"><div style="font-size:18px;font-weight:900;color:#4FC3F7;letter-spacing:3px;margin-bottom:3px">TABLE DE 10</div>
+    <div style="font-size:56px;margin:2px 0">⚡</div>
+    <div class="bubble">"Le <strong>bonus de puissance</strong> ! Colle un <strong>0</strong> derrière. 10 × 7 = <strong>70</strong>. Trop facile !"</div>
+    <div style="margin:4px 0"><span class="impact" style="color:#4FC3F7;font-size:26px">POWER BOOST !</span></div>
+    <div class="tip">⚡ Colle un 0 ! 10 × N = N0</div>
+    <div class="tp" id="tp11"></div></div></div>
+
+  <div id="s12" class="scene"><div class="bg-double2"></div><div class="sc">
+    <div style="font-size:18px;font-weight:900;color:#FF4081;letter-spacing:3px;margin-bottom:3px">TABLE DE 11</div>
+    <div style="font-size:56px;margin:2px 0">💥</div>
+    <div class="bubble">"Le <strong>Double Impact</strong> ! Écris le chiffre deux fois. 11 × 4 = <strong>44</strong>. 11 × 9 = <strong>99</strong> !"</div>
+    <div style="margin:4px 0"><span class="impact" style="color:#FF4081;font-size:26px">DOUBLE IMPACT !</span></div>
+    <div class="tip">💥 11 × N (1–9) = écrire N deux fois !</div>
+    <div class="tp" id="tp12"></div></div></div>
+
+  <!-- QUIZ SCENES -->
+  <div id="sq0" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox0"></div></div></div>
+  <div id="sq1" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox1"></div></div></div>
+  <div id="sq2" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox2"></div></div></div>
+  <div id="sq3" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox3"></div></div></div>
+  <div id="sq4" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox4"></div></div></div>
+  <div id="sq5" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox5"></div></div></div>
+  <div id="sq6" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox6"></div></div></div>
+  <div id="sq7" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox7"></div></div></div>
+  <div id="sq8" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox8"></div></div></div>
+  <div id="sq9" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox9"></div></div></div>
+  <div id="sq10" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox10"></div></div></div>
+  <div id="sq11" class="scene"><div class="bg-quiz"></div><div class="sc"><div id="qbox11"></div></div></div>
+
+  <!-- OUTRO -->
+  <div id="s13" class="scene"><div class="bg-outro"></div>
+    <div id="confetti-wrap" style="position:absolute;inset:0;pointer-events:none;z-index:5"></div>
+    <div class="sc">
+    <div style="font-size:56px;margin:2px 0;animation:bounce .5s infinite alternate">🏆</div>
+    <div class="title-fire" style="font-size:clamp(18px,4vw,24px)">TABLES DÉBLOQUÉES !</div>
+    <div id="final-stars" style="display:flex;gap:4px;justify-content:center;margin:5px 0"></div>
+    <div id="final-score" style="font-size:15px;font-weight:900;color:#FFD700;margin-bottom:5px"></div>
+    <div class="bubble">"Vous êtes des <strong>ninjas de la multiplication</strong> ! Les maths, c'est un <strong>super-pouvoir</strong> !"</div>
+    <div style="margin:7px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <span class="popup">ABONNE-TOI !</span>
+      <span class="popup" style="background:#FF4444;color:#fff;transform:rotate(2deg)">LIKE !</span>
+      <span class="popup" style="background:#4CAF50;color:#fff;transform:rotate(-2deg)">PARTAGE !</span>
+    </div>
+  </div></div>
+
+  <div class="prog-bar" id="prog-bar"></div>
+  <div class="nav-area">
+    <button class="nbtn red" onclick="navigate(-1)">◀ Retour</button>
+    <button class="nbtn" onclick="navigate(1)" id="next-btn">Suivant ▶</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// SVG CHARACTERS
+// ═══════════════════════════════════════════════
+const CHARS = {
+  smogogo:`<svg viewBox="0 0 100 110" width="100" height="100">
+    <ellipse cx="50" cy="70" rx="30" ry="28" fill="#9B59B6"/>
+    <ellipse cx="50" cy="70" rx="24" ry="22" fill="#AF7AC5"/>
+    <circle cx="35" cy="35" r="16" fill="#9B59B6"/>
+    <circle cx="55" cy="25" r="13" fill="#8E44AD"/>
+    <circle cx="70" cy="38" r="11" fill="#9B59B6"/>
+    <circle cx="50" cy="42" r="10" fill="#AF7AC5"/>
+    <circle cx="40" cy="64" r="6" fill="#fff"/>
+    <circle cx="60" cy="64" r="6" fill="#fff"/>
+    <circle cx="41" cy="64" r="3" fill="#1a0033"/>
+    <circle cx="61" cy="64" r="3" fill="#1a0033"/>
+    <path d="M38,78 Q50,87 62,78" stroke="#6C3483" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="35" cy="50" rx="14" ry="5" fill="#7D3C98" opacity="0.6" transform="rotate(-20,35,50)"/>
+    <ellipse cx="65" cy="45" rx="12" ry="4" fill="#7D3C98" opacity="0.5" transform="rotate(15,65,45)"/>
+    <ellipse cx="50" cy="40" rx="8" ry="3" fill="#7D3C98" opacity="0.4"/>
+  </svg>`,
+  magicarpe:`<svg viewBox="0 0 100 110" width="100" height="100">
+    <ellipse cx="50" cy="65" rx="22" ry="30" fill="#FF4500"/>
+    <ellipse cx="50" cy="60" rx="16" ry="22" fill="#FF6B35"/>
+    <path d="M28,50 Q10,30 15,60 Q25,70 30,58 Z" fill="#FF4500"/>
+    <path d="M72,50 Q90,30 85,60 Q75,70 70,58 Z" fill="#FF4500"/>
+    <path d="M35,85 Q50,100 65,85 Q60,72 50,70 Q40,72 35,85 Z" fill="#FF6B35"/>
+    <path d="M30,40 Q20,20 35,30 Q40,38 38,45 Z" fill="#FFA500"/>
+    <path d="M70,40 Q80,20 65,30 Q60,38 62,45 Z" fill="#FFA500"/>
+    <circle cx="40" cy="55" r="7" fill="#fff"/>
+    <circle cx="60" cy="55" r="7" fill="#fff"/>
+    <circle cx="41" cy="55" r="4" fill="#000"/>
+    <circle cx="61" cy="55" r="4" fill="#000"/>
+    <ellipse cx="50" cy="66" rx="7" ry="4" fill="#CC3300"/>
+    <path d="M37,68 Q50,76 63,68" stroke="#CC3300" stroke-width="2" fill="none"/>
+    <ellipse cx="36" cy="58" rx="5" ry="3" fill="#FFD700" opacity="0.8"/>
+    <ellipse cx="64" cy="58" rx="5" ry="3" fill="#FFD700" opacity="0.8"/>
+  </svg>`,
+  trubbish:`<svg viewBox="0 0 100 110" width="100" height="110">
+    <ellipse cx="50" cy="75" rx="28" ry="30" fill="#9acd32"/>
+    <ellipse cx="50" cy="75" rx="22" ry="24" fill="#adde3f"/>
+    <path d="M30,55 Q50,35 70,55" stroke="#9acd32" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <rect x="35" y="30" width="10" height="18" rx="5" fill="#9acd32" transform="rotate(-15,40,39)"/>
+    <rect x="55" y="28" width="10" height="18" rx="5" fill="#9acd32" transform="rotate(15,60,37)"/>
+    <circle cx="42" cy="70" r="7" fill="#fff"/>
+    <circle cx="58" cy="70" r="7" fill="#fff"/>
+    <circle cx="43" cy="70" r="4" fill="#228B22"/>
+    <circle cx="59" cy="70" r="4" fill="#228B22"/>
+    <path d="M38,86 Q50,95 62,86" stroke="#228B22" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="50" cy="60" rx="15" ry="5" fill="#228B22" opacity="0.2"/>
+  </svg>`,
+  vanilluxe:`<svg viewBox="0 0 100 120" width="100" height="110">
+    <ellipse cx="35" cy="60" rx="22" ry="28" fill="#E0F7FF"/>
+    <ellipse cx="65" cy="55" rx="22" ry="28" fill="#F0FAFF"/>
+    <ellipse cx="35" cy="60" rx="18" ry="24" fill="#fff" opacity="0.7"/>
+    <ellipse cx="65" cy="55" rx="18" ry="24" fill="#fff" opacity="0.7"/>
+    <ellipse cx="35" cy="88" rx="10" ry="6" fill="#B0D0FF"/>
+    <ellipse cx="65" cy="83" rx="10" ry="6" fill="#B0D0FF"/>
+    <path d="M25,88 L35,105 L45,88" fill="#B0D0FF"/>
+    <path d="M55,83 L65,100 L75,83" fill="#B0D0FF"/>
+    <circle cx="29" cy="56" r="5" fill="#fff"/><circle cx="41" cy="56" r="5" fill="#fff"/>
+    <circle cx="59" cy="51" r="5" fill="#fff"/><circle cx="71" cy="51" r="5" fill="#fff"/>
+    <circle cx="30" cy="56" r="2.5" fill="#1a1a8c"/><circle cx="42" cy="56" r="2.5" fill="#1a1a8c"/>
+    <circle cx="60" cy="51" r="2.5" fill="#1a1a8c"/><circle cx="72" cy="51" r="2.5" fill="#1a1a8c"/>
+    <path d="M26,66 Q35,72 44,66" stroke="#88AADD" stroke-width="2" fill="none"/>
+    <path d="M56,61 Q65,67 74,61" stroke="#88AADD" stroke-width="2" fill="none"/>
+    <ellipse cx="28" cy="42" rx="8" ry="6" fill="#87CEEB" opacity="0.8"/>
+    <ellipse cx="72" cy="37" rx="8" ry="6" fill="#87CEEB" opacity="0.8"/>
+  </svg>`,
+  zubat:`<svg viewBox="0 0 120 90" width="120" height="100">
+    <ellipse cx="60" cy="52" rx="20" ry="18" fill="#9370DB"/>
+    <path d="M40,52 Q10,20 5,55 Q20,60 40,55 Z" fill="#7B52C0"/>
+    <path d="M80,52 Q110,20 115,55 Q100,60 80,55 Z" fill="#7B52C0"/>
+    <path d="M40,52 Q25,25 40,18 Q50,30 60,52 Z" fill="#6B42B0"/>
+    <path d="M80,52 Q95,25 80,18 Q70,30 60,52 Z" fill="#6B42B0"/>
+    <circle cx="52" cy="46" r="7" fill="#FF4444"/>
+    <circle cx="68" cy="46" r="7" fill="#FF4444"/>
+    <circle cx="52" cy="46" r="3.5" fill="#000"/>
+    <circle cx="68" cy="46" r="3.5" fill="#000"/>
+    <path d="M48,60 L52,70 L56,60" stroke="#9370DB" stroke-width="2" fill="none"/>
+    <path d="M64,60 L68,70 L72,60" stroke="#9370DB" stroke-width="2" fill="none"/>
+  </svg>`,
+  carapuce:`<svg viewBox="0 0 100 115" width="100" height="110">
+    <ellipse cx="50" cy="72" rx="28" ry="30" fill="#5B7EC5"/>
+    <ellipse cx="50" cy="72" rx="22" ry="24" fill="#7B9FE0"/>
+    <ellipse cx="50" cy="68" rx="16" ry="18" fill="#F5DEB3"/>
+    <path d="M28,58 Q50,42 72,58 Q68,82 50,88 Q32,82 28,58 Z" fill="#2E8B57" opacity="0.85"/>
+    <path d="M50,42 L50,88 M28,58 Q50,65 72,58 M36,46 Q50,53 64,46" stroke="#1a5a30" stroke-width="1.5" fill="none"/>
+    <circle cx="50" cy="36" r="20" fill="#7B9FE0"/>
+    <ellipse cx="38" cy="22" rx="8" ry="12" fill="#5B7EC5" transform="rotate(-15,38,22)"/>
+    <ellipse cx="62" cy="22" rx="8" ry="12" fill="#5B7EC5" transform="rotate(15,62,22)"/>
+    <circle cx="42" cy="33" r="6" fill="#fff"/>
+    <circle cx="58" cy="33" r="6" fill="#fff"/>
+    <circle cx="43" cy="33" r="3.5" fill="#1a1a60"/>
+    <circle cx="59" cy="33" r="3.5" fill="#1a1a60"/>
+    <ellipse cx="50" cy="44" rx="5" ry="3" fill="#CC6655"/>
+    <path d="M40,47 Q50,53 60,47" stroke="#CC6655" stroke-width="2" fill="none"/>
+    <path d="M36,97 Q50,110 64,97" stroke="#4A6AAA" stroke-width="8" stroke-linecap="round" fill="none"/>
+  </svg>`,
+  psyduck:`<svg viewBox="0 0 100 115" width="100" height="110">
+    <ellipse cx="50" cy="65" rx="28" ry="32" fill="#FFD700"/>
+    <circle cx="50" cy="38" r="24" fill="#FFD700"/>
+    <ellipse cx="50" cy="30" rx="18" ry="8" fill="#CC8800"/>
+    <circle cx="40" cy="36" r="8" fill="#fff"/>
+    <circle cx="60" cy="36" r="8" fill="#fff"/>
+    <circle cx="41" cy="37" r="4.5" fill="#000"/>
+    <circle cx="61" cy="37" r="4.5" fill="#000"/>
+    <ellipse cx="50" cy="50" rx="10" ry="6" fill="#E8A000"/>
+    <path d="M38,51 Q50,58 62,51" stroke="#CC7700" stroke-width="2.5" fill="#FFE066" stroke-linecap="round"/>
+    <ellipse cx="22" cy="72" rx="7" ry="10" fill="#FFD700"/>
+    <ellipse cx="78" cy="72" rx="7" ry="10" fill="#FFD700"/>
+    <ellipse cx="36" cy="97" rx="8" ry="5" fill="#E8A000"/>
+    <ellipse cx="64" cy="97" rx="8" ry="5" fill="#E8A000"/>
+    <path d="M42,22 L38,10" stroke="#CC8800" stroke-width="3" stroke-linecap="round"/>
+    <path d="M50,20 L50,7" stroke="#CC8800" stroke-width="3" stroke-linecap="round"/>
+    <path d="M58,22 L62,10" stroke="#CC8800" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+  eevee:`<svg viewBox="0 0 100 110" width="100" height="110">
+    <ellipse cx="50" cy="72" rx="25" ry="28" fill="#C8844C"/>
+    <circle cx="50" cy="40" r="22" fill="#C8844C"/>
+    <ellipse cx="50" cy="55" rx="18" ry="22" fill="#F5DEB3"/>
+    <ellipse cx="50" cy="35" rx="16" ry="10" fill="#F5DEB3"/>
+    <ellipse cx="30" cy="20" rx="8" ry="16" fill="#C8844C" transform="rotate(-15,30,20)"/>
+    <ellipse cx="30" cy="20" rx="5" ry="11" fill="#DEB887" transform="rotate(-15,30,20)"/>
+    <ellipse cx="70" cy="20" rx="8" ry="16" fill="#C8844C" transform="rotate(15,70,20)"/>
+    <ellipse cx="70" cy="20" rx="5" ry="11" fill="#DEB887" transform="rotate(15,70,20)"/>
+    <circle cx="42" cy="38" r="6" fill="#fff"/>
+    <circle cx="58" cy="38" r="6" fill="#fff"/>
+    <circle cx="43" cy="38" r="3.5" fill="#2d1800"/>
+    <circle cx="59" cy="38" r="3.5" fill="#2d1800"/>
+    <ellipse cx="50" cy="48" rx="5" ry="3" fill="#CC6655"/>
+    <path d="M40,52 Q50,58 60,52" stroke="#CC6655" stroke-width="2" fill="none"/>
+    <path d="M36,95 Q50,110 64,95 Q60,80 50,77 Q40,80 36,95 Z" fill="#F5DEB3"/>
+  </svg>`,
+  lucario:`<svg viewBox="0 0 100 120" width="100" height="115">
+    <rect x="32" y="55" width="36" height="45" rx="8" fill="#2244AA"/>
+    <rect x="32" y="55" width="36" height="20" rx="6" fill="#FFD700"/>
+    <circle cx="50" cy="36" r="22" fill="#1a3399"/>
+    <ellipse cx="50" cy="44" rx="14" ry="10" fill="#88AAFF"/>
+    <rect x="24" y="60" width="12" height="30" rx="6" fill="#1a3399"/>
+    <rect x="64" y="60" width="12" height="30" rx="6" fill="#1a3399"/>
+    <rect x="36" y="98" width="12" height="20" rx="6" fill="#1a3399"/>
+    <rect x="52" y="98" width="12" height="20" rx="6" fill="#1a3399"/>
+    <ellipse cx="36" cy="18" rx="7" ry="17" fill="#1a3399" transform="rotate(-10,36,18)"/>
+    <ellipse cx="64" cy="18" rx="7" ry="17" fill="#1a3399" transform="rotate(10,64,18)"/>
+    <ellipse cx="36" cy="17" rx="4" ry="12" fill="#88AAFF" transform="rotate(-10,36,17)"/>
+    <ellipse cx="64" cy="17" rx="4" ry="12" fill="#88AAFF" transform="rotate(10,64,17)"/>
+    <circle cx="42" cy="34" r="6" fill="#fff"/>
+    <circle cx="58" cy="34" r="6" fill="#fff"/>
+    <circle cx="43" cy="34" r="3.5" fill="#000"/>
+    <circle cx="59" cy="34" r="3.5" fill="#000"/>
+    <path d="M40,46 Q50,53 60,46" stroke="#88AAFF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="50" cy="60" r="6" fill="#4466FF" opacity="0.8"/>
+    <circle cx="26" cy="75" r="5" fill="#4466FF" opacity="0.7"/>
+    <circle cx="74" cy="75" r="5" fill="#4466FF" opacity="0.7"/>
+  </svg>`,
+  charizard:`<svg viewBox="0 0 110 130" width="110" height="120">
+    <ellipse cx="55" cy="75" rx="28" ry="38" fill="#FF6B2B"/>
+    <circle cx="55" cy="40" r="22" fill="#FF6B2B"/>
+    <ellipse cx="55" cy="52" rx="16" ry="12" fill="#F0C060"/>
+    <ellipse cx="36" cy="22" rx="8" ry="16" fill="#FF6B2B" transform="rotate(-15,36,22)"/>
+    <ellipse cx="74" cy="22" rx="8" ry="16" fill="#FF6B2B" transform="rotate(15,74,22)"/>
+    <path d="M25,65 Q5,45 8,75 Q18,85 30,78 Z" fill="#3399FF" opacity="0.9"/>
+    <path d="M85,65 Q105,45 102,75 Q92,85 80,78 Z" fill="#3399FF" opacity="0.9"/>
+    <path d="M25,65 Q10,50 15,70 Q22,78 30,75 Z" fill="#99CCFF"/>
+    <path d="M85,65 Q100,50 95,70 Q88,78 80,75 Z" fill="#99CCFF"/>
+    <circle cx="47" cy="37" r="6" fill="#fff"/>
+    <circle cx="63" cy="37" r="6" fill="#fff"/>
+    <circle cx="48" cy="37" r="3.5" fill="#221100"/>
+    <circle cx="64" cy="37" r="3.5" fill="#221100"/>
+    <path d="M43,50 Q55,57 67,50" stroke="#CC4400" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M42,100 L36,118" stroke="#FF6B2B" stroke-width="10" stroke-linecap="round"/>
+    <path d="M68,100 L74,118" stroke="#FF6B2B" stroke-width="10" stroke-linecap="round"/>
+    <ellipse cx="76" cy="116" rx="8" ry="5" fill="#FF4400"/>
+    <ellipse cx="76" cy="114" rx="6" ry="7" fill="#FF6600"/>
+    <ellipse cx="76" cy="111" rx="4" ry="5" fill="#FFAA00"/>
+    <ellipse cx="76" cy="108" rx="2" ry="3" fill="#FFFF00"/>
+  </svg>`,
+  pikachu:`<svg viewBox="0 0 100 120" width="100" height="115">
+    <ellipse cx="50" cy="72" rx="26" ry="30" fill="#FFD700"/>
+    <circle cx="50" cy="42" r="24" fill="#FFD700"/>
+    <ellipse cx="30" cy="16" rx="8" ry="18" fill="#FFD700" transform="rotate(-8,30,16)"/>
+    <ellipse cx="70" cy="16" rx="8" ry="18" fill="#FFD700" transform="rotate(8,70,16)"/>
+    <ellipse cx="30" cy="14" rx="5" ry="13" fill="#2d2d2d" transform="rotate(-8,30,14)"/>
+    <ellipse cx="70" cy="14" rx="5" ry="13" fill="#2d2d2d" transform="rotate(8,70,14)"/>
+    <circle cx="42" cy="40" r="7" fill="#fff"/>
+    <circle cx="58" cy="40" r="7" fill="#fff"/>
+    <circle cx="43" cy="40" r="4" fill="#1a1a1a"/>
+    <circle cx="59" cy="40" r="4" fill="#1a1a1a"/>
+    <circle cx="44" cy="38" r="1.5" fill="#fff"/>
+    <circle cx="60" cy="38" r="1.5" fill="#fff"/>
+    <ellipse cx="50" cy="50" rx="6" ry="3.5" fill="#CC4444"/>
+    <path d="M38,55 Q50,63 62,55" stroke="#CC4444" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="35" cy="56" rx="8" ry="5" fill="#FF5555" opacity="0.85"/>
+    <ellipse cx="65" cy="56" rx="8" ry="5" fill="#FF5555" opacity="0.85"/>
+    <ellipse cx="25" cy="78" rx="8" ry="11" fill="#FFD700"/>
+    <ellipse cx="75" cy="78" rx="8" ry="11" fill="#FFD700"/>
+    <ellipse cx="36" cy="101" rx="9" ry="5" fill="#CC9900"/>
+    <ellipse cx="64" cy="101" rx="9" ry="5" fill="#CC9900"/>
+    <path d="M36,84 Q15,75 10,60 Q20,55 36,72 Z" fill="#2d2d2d"/>
+    <path d="M64,84 Q85,75 90,60 Q80,55 64,72 Z" fill="#2d2d2d"/>
+    <path d="M36,84 Q20,78 18,64" stroke="#FFD700" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M64,84 Q80,78 82,64" stroke="#FFD700" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  mew:`<svg viewBox="0 0 80 70" width="80" height="70">
+    <ellipse cx="40" cy="38" rx="22" ry="20" fill="#FFB6C1"/>
+    <circle cx="40" cy="25" r="16" fill="#FFB6C1"/>
+    <ellipse cx="28" cy="14" rx="7" ry="11" fill="#FFB6C1" transform="rotate(-20,28,14)"/>
+    <ellipse cx="52" cy="14" rx="7" ry="11" fill="#FFB6C1" transform="rotate(20,52,14)"/>
+    <ellipse cx="28" cy="13" rx="4" ry="7" fill="#FF9999" transform="rotate(-20,28,13)"/>
+    <ellipse cx="52" cy="13" rx="4" ry="7" fill="#FF9999" transform="rotate(20,52,13)"/>
+    <circle cx="34" cy="23" r="5" fill="#fff"/>
+    <circle cx="46" cy="23" r="5" fill="#fff"/>
+    <circle cx="35" cy="23" r="3" fill="#4040CC"/>
+    <circle cx="47" cy="23" r="3" fill="#4040CC"/>
+    <ellipse cx="40" cy="31" rx="4" ry="2.5" fill="#FF9999"/>
+    <ellipse cx="22" cy="42" rx="6" ry="9" fill="#FFB6C1"/>
+    <ellipse cx="58" cy="42" rx="6" ry="9" fill="#FFB6C1"/>
+    <ellipse cx="32" cy="57" rx="7" ry="4" fill="#FFAACC"/>
+    <ellipse cx="48" cy="57" rx="7" ry="4" fill="#FFAACC"/>
+    <path d="M40,56 Q60,58 70,50 Q75,44 65,40" stroke="#FFB6C1" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <circle cx="65" cy="40" r="5" fill="#FFB6C1"/>
+  </svg>`
+};
+
+// ═══════════════════════════════════════════════
+// REWARD DATA — score 0..10
+// ═══════════════════════════════════════════════
+const REWARD_DATA = [
+  {name:'Smogogo',  svg:'smogogo',  color:'#AF7AC5', title:'Attaque pensée empoisonnée, révise pour tout réparer',  sub:'',           bg:'#0f001a', litStars:0},
+  {name:'Magicarpe',svg:'magicarpe',color:'#FF6B35', title:'Attention à la glissade ! Entraîne-toi pour éviter la noyade', sub:'',   bg:'#1a0800', litStars:1},
+  {name:'Miamiasme',svg:'trubbish', color:'#9acd32', title:'Pouah, une créature sac poubelle ! Sors-toi de là et repasse le test !', sub:'Je crois en toi', bg:'#0a1a00', litStars:1},
+  {name:'Sorbouboul',svg:'vanilluxe',color:'#87CEEB', title:'Attaque blizzard gelé',                                sub:'',           bg:'#001a2a', litStars:1},
+  {name:'Nosferapti',svg:'zubat',   color:'#9370DB', title:'Fraye-toi un chemin pour sortir de la grotte',         sub:'',           bg:'#0a001a', litStars:2},
+  {name:'Carapuce', svg:'carapuce', color:'#7B9FE0', title:'Tu sors de ta carapace',                               sub:'',           bg:'#00101a', litStars:2},
+  {name:'Psykokwak',svg:'psyduck',  color:'#FFD700', title:'Pouvoirs mystérieux débloqués',                        sub:'',           bg:'#1a1400', litStars:2},
+  {name:'Évoli',    svg:'eevee',    color:'#C8844C', title:'Tu t\'adaptes de mieux en mieux à ton milieu naturel. Félicitation !', sub:'', bg:'#1a0a00', litStars:3},
+  {name:'Lucario',  svg:'lucario',  color:'#4466FF', title:'Belle progression ! Que d\'émotions. Félicitation !', sub:'',           bg:'#00001a', litStars:3},
+  {name:'Dracaufeu',svg:'charizard',color:'#FF6B2B', title:'Petit lézard est devenu dragon. Félicitation !',       sub:'',           bg:'#1a0800', litStars:3},
+  {name:'Pikachu',  svg:'pikachu',  color:'#FFD700', title:'Quelle énergie ! Quelle puissance ! Félicitation !',  sub:'',           bg:'#1a1200', litStars:3, special:true},
+];
+
+// ═══════════════════════════════════════════════
+// SCENE ORDER
+// ═══════════════════════════════════════════════
+const sceneOrder=[];
+sceneOrder.push({id:'s0',type:'intro',name:'Intro'});
+for(let t=0;t<=11;t++){
+  sceneOrder.push({id:'s'+(t+1),type:'lesson',name:'Table de '+t,tbl:t});
+  sceneOrder.push({id:'sq'+t,type:'quiz',name:'Quiz × '+t,tbl:t});
+}
+sceneOrder.push({id:'s13',type:'outro',name:'Fin !'});
+const TOTAL=sceneOrder.length;
+let cur=0,autoPlay=false,autoTimer=null,totalStars=0;
+const quizStates={};
+
+// ═══════════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════════
+const AC=window.AudioContext||window.webkitAudioContext;
+let actx=null;
+function getAC(){if(!actx&&AC)actx=new AC();return actx;}
+function tone(f,d,t='sine',v=0.25){try{const a=getAC();if(!a)return;const o=a.createOscillator();const g=a.createGain();o.connect(g);g.connect(a.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);o.start();o.stop(a.currentTime+d);}catch(e){}}
+function playWhoosh(){tone(800,.12,'sine',.15);setTimeout(()=>tone(400,.1,'sine',.1),100);}
+function playOk(){[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.12),i*70));}
+function playErr(){tone(180,.25,'sawtooth',.22);}
+function playIntro(){[262,330,392,523].forEach((f,i)=>setTimeout(()=>tone(f,.18),i*90));}
+function playWin(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.2),i*90));}
+function playReward(score){
+  const notes=[220,262,294,330,349,392,440,494,523,587,659,698];
+  const n=Math.min(score,10);
+  for(let i=0;i<n;i++) setTimeout(()=>tone(notes[i],.18),i*90);
+  const fin=n*90+120;
+  setTimeout(()=>tone(notes[Math.min(n,11)],.4),fin);
+  setTimeout(()=>tone(notes[Math.min(n+1,11)],.4),fin+180);
+  if(score===10){
+    setTimeout(()=>{[523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>tone(f,.25),i*80));},fin+400);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function genWrongs(correct,tbl){
+  const wrongs=new Set();let tries=0;
+  while(wrongs.size<3&&tries<200){tries++;let w;if(Math.random()<0.5)w=tbl*rnd(0,11);else w=correct+rnd(-3,3)*rnd(1,3);if(w!==correct&&w>=0)wrongs.add(w);}
+  let v=1;while(wrongs.size<3){if(v!==correct)wrongs.add(v);v++;}
+  return[...wrongs].slice(0,3);
+}
+
+// ═══════════════════════════════════════════════
+// QUIZ LOGIC
+// ═══════════════════════════════════════════════
+function initQuiz(tbl){
+  const allB=shuffle([0,1,2,3,4,5,6,7,8,9,10,11]).slice(0,10);
+  const questions=allB.map(b=>{const r=tbl*b;const wrongs=genWrongs(r,tbl);return{a:tbl,b,r,choices:shuffle([r,...wrongs]),answered:false,wasCorrect:false,chosen:null};});
+  quizStates[tbl]={questions,cur:0,correct:0,wrong:0,done:false};
+}
+
+function starsHTML(litCount, blink){
+  return[1,2,3].map(i=>{
+    if(i<=litCount){
+      return `<span class="reward-star${blink?' blink':''}" style="animation-delay:${(i-1)*0.15}s;color:#FFD700;font-size:28px">★</span>`;
+    }
+    return `<span class="reward-star" style="animation-delay:${(i-1)*0.15}s;color:#444;font-size:28px">★</span>`;
+  }).join('');
+}
+
+function renderRewardScreen(tbl){
+  const qs=quizStates[tbl];
+  const score=qs.correct;
+  const rd=REWARD_DATA[score];
+  const pct=score*10;
+  playReward(score);
+  if(rd.special) launchMewFireworks();
+  const subHtml = rd.sub ? `<div style="font-size:12px;color:#ccc;margin-top:3px;margin-bottom:5px">${rd.sub}</div>` : '';
+  return `<div class="reward-screen" style="background:${rd.bg}">
+    <div style="font-size:12px;font-weight:900;color:${rd.color};letter-spacing:2px;margin-bottom:4px">🎊 TABLE DE ${tbl} — ${score}/10 🎊</div>
+    <div class="reward-char">${CHARS[rd.svg]}</div>
+    <div style="font-size:15px;font-weight:900;color:${rd.color};margin:4px 0">${rd.title}</div>
+    ${subHtml}
+    <div class="reward-stars">${starsHTML(rd.litStars, rd.special)}</div>
+    <div style="background:rgba(255,255,255,0.1);border-radius:8px;height:7px;margin:0 20px 8px;overflow:hidden">
+      <div style="background:${rd.color};height:100%;width:${pct}%;border-radius:8px;transition:width 1s ease"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="nbtn" onclick="restartQuiz(${tbl})">🔄 Rejouer</button>
+      <button class="nbtn" onclick="navigate(1)">Suivant ▶</button>
+    </div>
+  </div>`;
+}
+
+function launchMewFireworks(){
+  // Mew flying across
+  const mew=document.createElement('div');
+  mew.className='mew-fly';
+  mew.innerHTML=CHARS.mew;
+  document.body.appendChild(mew);
+  setTimeout(()=>mew.remove(),3200);
+  // Fireworks
+  const colors=['#FFD700','#FF4444','#4FC3F7','#E040FB','#69F0AE','#FF9800'];
+  for(let i=0;i<12;i++){
+    setTimeout(()=>{
+      const fw=document.createElement('div');
+      fw.className='firework-el';
+      const size=rnd(20,50);
+      fw.style.cssText=`left:${rnd(10,90)}%;top:${rnd(10,60)}%;width:${size}px;height:${size}px;background:${colors[rnd(0,5)]};animation-duration:${0.6+Math.random()*0.5}s`;
+      document.body.appendChild(fw);
+      setTimeout(()=>fw.remove(),1200);
+    },i*200);
+  }
+}
+
+function renderQuiz(tbl){
+  const box=document.getElementById('qbox'+tbl);if(!box)return;
+  const qs=quizStates[tbl];if(!qs)return;
+  if(qs.done){box.innerHTML=renderRewardScreen(tbl);return;}
+  const qi=qs.cur;const q=qs.questions[qi];
+  const dots=qs.questions.map((qq,i)=>{let cls='qp-dot';if(i<qi)cls+=' '+(qq.wasCorrect?'ok':'err');else if(i===qi)cls+=' cur';return`<div class="${cls}"></div>`;}).join('');
+  const choicesHtml=q.choices.map(c=>{
+    let cls='qchoice';
+    if(q.answered){
+      if(c===q.r) cls+=' correct';
+      else if(c===q.chosen) cls+=' wrong';
+    }
+    return `<button class="${cls}" ${q.answered?'disabled':''} onclick="answerQ(${tbl},${c})">${c}</button>`;
+  }).join('');
+  box.innerHTML=`<div class="quiz-wrap">
+    <div class="quiz-header"><span class="quiz-badge">QUIZ × ${tbl}</span><div class="quiz-progress">${dots}</div></div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:3px;text-align:right">${qi+1}/10</div>
+    <div class="quiz-q">${q.a} × ${q.b} = ?</div>
+    <div class="quiz-choices">${choicesHtml}</div>
+    <div class="quiz-fb${q.answered?(q.wasCorrect?' ok':' err'):''}">${q.answered?(q.wasCorrect?'⚡ BRAVO !':"😤 C'était "+q.r):''}</div>
+    <div class="quiz-score-bar"><span class="qs-ok">✔ ${qs.correct}</span><span class="qs-err">✘ ${qs.wrong}</span><span style="color:#555">|</span><span>⭐ ${totalStars}</span></div>
+    ${q.answered?`<div style="margin-top:6px"><button class="nbtn" onclick="nextQ(${tbl})">${qi<9?'Question suivante →':'Voir la récompense →'}</button></div>`:''}
+  </div>`;
+}
+
+function answerQ(tbl,chosen){
+  const qs=quizStates[tbl];if(!qs)return;
+  const q=qs.questions[qs.cur];if(q.answered)return;
+  q.answered=true;q.chosen=chosen;q.wasCorrect=(chosen===q.r);
+  if(q.wasCorrect){qs.correct++;totalStars++;playOk();}else{qs.wrong++;playErr();}
+  updateScoreLbl();renderQuiz(tbl);
+}
+function nextQ(tbl){
+  const qs=quizStates[tbl];if(!qs)return;
+  if(qs.cur<9){qs.cur++;renderQuiz(tbl);}else{qs.done=true;renderQuiz(tbl);}
+}
+function restartQuiz(tbl){
+  if(quizStates[tbl])totalStars-=quizStates[tbl].correct;
+  initQuiz(tbl);updateScoreLbl();renderQuiz(tbl);
+}
+function updateScoreLbl(){document.getElementById('score-lbl').textContent='⭐ '+totalStars;}
+
+// ═══════════════════════════════════════════════
+// LESSON HELPERS
+// ═══════════════════════════════════════════════
+const tableData=Array.from({length:12},(_,t)=>Array.from({length:12},(_,i)=>({a:t,b:i,r:t*i})));
+function buildTablePreview(id,tbl){
+  const el=document.getElementById(id);if(!el)return;el.innerHTML='';
+  tableData[tbl].forEach((op,i)=>{const d=document.createElement('div');d.className='tpi';d.textContent=`${op.a}×${op.b}=${op.r}`;d.style.animationDelay=(i*45)+'ms';el.appendChild(d);});
+}
+function buildFingers(){
+  const f=document.getElementById('fingers9');if(!f)return;f.innerHTML='';
+  for(let i=1;i<=10;i++){const d=document.createElement('div');d.className='finger'+(i===3?' down':'');d.textContent=i;f.appendChild(d);}
+}
+function spawnConfetti(){
+  const wrap=document.getElementById('confetti-wrap');if(!wrap)return;wrap.innerHTML='';
+  const colors=['#FFD700','#FF4444','#4CAF50','#4FC3F7','#E040FB','#FF9800'];
+  for(let i=0;i<60;i++){const p=document.createElement('div');p.className='confetti-piece';p.style.cssText=`left:${Math.random()*100}%;background:${colors[rnd(0,5)]};animation-duration:${1+Math.random()*2}s;animation-delay:${Math.random()*1.5}s;position:absolute;width:8px;height:8px;border-radius:2px`;wrap.appendChild(p);}
+}
+function buildFinalScore(){
+  const pct=Math.round(totalStars/120*100);
+  const stars=pct>=90?3:pct>=60?2:pct>0?1:0;
+  const sr=document.getElementById('final-stars');
+  if(sr)sr.innerHTML=[1,2,3].map(i=>`<span class="star ${i<=stars?'lit':'dim'}">★</span>`).join('');
+  const sc=document.getElementById('final-score');
+  if(sc)sc.textContent=`${totalStars}/120 étoiles (${pct}%)`;
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function buildProg(){
+  const pb=document.getElementById('prog-bar');pb.innerHTML='';
+  sceneOrder.forEach((sc,i)=>{
+    const d=document.createElement('div');
+    const isQ=sc.type==='quiz';
+    d.className='pdot'+(isQ?' quiz-dot':'')+(i<cur?' done':i===cur?' current':'');
+    d.title=sc.name;d.onclick=(()=>{const idx=i;return()=>goTo(idx);})(i);
+    pb.appendChild(d);
+  });
+}
+function goTo(n){
+  document.getElementById(sceneOrder[cur].id).classList.remove('active');
+  cur=Math.max(0,Math.min(TOTAL-1,n));
+  const sc=sceneOrder[cur];
+  document.getElementById(sc.id).classList.add('active');
+  document.getElementById('scene-lbl').textContent=sc.name;
+  buildProg();playWhoosh();
+  if(cur===0)playIntro();
+  if(sc.type==='lesson'){buildTablePreview('tp'+(sc.tbl+1),sc.tbl);if(sc.tbl===9)buildFingers();}
+  if(sc.type==='quiz'){if(!quizStates[sc.tbl])initQuiz(sc.tbl);renderQuiz(sc.tbl);}
+  if(sc.type==='outro'){playWin();spawnConfetti();buildFinalScore();}
+  document.getElementById('next-btn').textContent=cur===TOTAL-1?'🔁 Rejouer':'Suivant ▶';
+  if(autoPlay)resetAutoTimer();
+}
+function navigate(d){if(cur===TOTAL-1&&d===1)goTo(0);else goTo(cur+d);}
+function toggleAuto(){
+  autoPlay=!autoPlay;
+  const btn=document.getElementById('atbtn');
+  btn.className='atbtn'+(autoPlay?' on':'');
+  btn.textContent=autoPlay?'⏸ Auto':'▶ Auto';
+  if(autoPlay)resetAutoTimer();else clearInterval(autoTimer);
+}
+function resetAutoTimer(){
+  clearInterval(autoTimer);
+  const dur=sceneOrder[cur].type==='quiz'?30000:7000;
+  autoTimer=setTimeout(()=>{if(cur<TOTAL-1)goTo(cur+1);else{autoPlay=false;document.getElementById('atbtn').className='atbtn';document.getElementById('atbtn').textContent='▶ Auto';}},dur);
+}
+document.getElementById('stage').addEventListener('click',function(e){
+  if(e.target.closest('.nbtn')||e.target.closest('.pdot')||e.target.closest('.atbtn')||e.target.closest('.qchoice')||e.target.closest('.quiz-wrap')||e.target.closest('#logo-fixed'))return;
+  if(sceneOrder[cur].type==='quiz')return;
+  navigate(1);
+});
+buildProg();
+</script>
+</body>
+</html>
